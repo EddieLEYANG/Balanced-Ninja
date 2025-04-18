@@ -4364,7 +4364,7 @@ GameObject:
   - component: {fileID: 1041554118}
   - component: {fileID: 1041554117}
   - component: {fileID: 1041554116}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -4471,20 +4471,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04e1103fb10935438cf57f6d71cfd3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 128
+  platformLayers:
+    serializedVersion: 2
+    m_Bits: 256
+  hazardLayers:
+    serializedVersion: 2
+    m_Bits: 512
   enemyBounceForce: 2
   killSound: {fileID: 0}
   enemyDetectionRadius: 0.2
   minWallBounceForce: 1
   maxWallBounceForce: 5
   wallBounceMultiplier: 1
-  velocityDeadzone: 1
-  maxBounceVelocity: 10
-  addUpwardForce: 1
+  velocityDeadzone: 0.1
+  maxBounceVelocity: 5
+  addUpwardForce: 0
   upwardForceAmount: 2
   wallBounceSound: {fileID: 0}
+  forceWallBounces: 0
   deathEffect: {fileID: 0}
   deathSound: {fileID: 0}
   respawnDelay: 2
+  showDebugInfo: 0
+  showBounceGizmos: 0
 --- !u!61 &1041554117
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -4544,7 +4556,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0.5
-  m_AngularDrag: 0.05
+  m_AngularDrag: 1
   m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -4556,7 +4568,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!1 &1073862708
 GameObject:
   m_ObjectHideFlags: 0
@@ -4568,7 +4580,7 @@ GameObject:
   - component: {fileID: 1073862709}
   - component: {fileID: 1073862711}
   - component: {fileID: 1073862710}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: HomeMadeWall By Issac (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5457,7 +5469,7 @@ GameObject:
   - component: {fileID: 1713246028}
   - component: {fileID: 1713246030}
   - component: {fileID: 1713246029}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: HomeMadeWall By Issac
   m_TagString: Untagged
   m_Icon: {fileID: 0}
