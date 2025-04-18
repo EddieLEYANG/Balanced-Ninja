@@ -41,6 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Player
+  - name: Platform
+    uniqueID: 968378453
+    locked: 0
+  - name: CheckPoint
+    uniqueID: 2834298561
+    locked: 0
+  - name: Trap
+    uniqueID: 4166188173
+    locked: 0
+  - name: Character
     uniqueID: 1922382047
     locked: 0
