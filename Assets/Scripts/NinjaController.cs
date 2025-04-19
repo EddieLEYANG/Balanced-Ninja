@@ -9,11 +9,13 @@ public class NinjaController : MonoBehaviour
     public LayerMask hazardLayers;
     
     [Header("Enemy Interaction")]
+    public bool bounceOffEnemies = false; // Toggle enemy bounce mechanics
     public float enemyBounceForce = 5f;
     public AudioClip killSound;
     public float enemyDetectionRadius = 0.5f;
 
     [Header("Wall Interaction")]
+    public bool bounceOffWalls = false; // Toggle wall bounce mechanics
     public float minWallBounceForce = 1f;
     public float maxWallBounceForce = 5f;
     public float wallBounceMultiplier = 1.2f;
@@ -67,7 +69,7 @@ public class NinjaController : MonoBehaviour
         }
 
         // Enable debug mode if bounces aren't working
-        if (forceWallBounces)
+        if (forceWallBounces && bounceOffWalls)
         {
             showDebugInfo = true;
             Debug.Log("Force Wall Bounces mode is enabled!");
@@ -199,8 +201,11 @@ public class NinjaController : MonoBehaviour
             audioSource.PlayOneShot(killSound);
         }
         
-        // Apply a small bounce
-        rb.AddForce(Vector2.up * enemyBounceForce, ForceMode2D.Impulse);
+        // Apply a small bounce if enabled
+        if (bounceOffEnemies)
+        {
+            rb.AddForce(Vector2.up * enemyBounceForce, ForceMode2D.Impulse);
+        }
         
         // Trigger animation if available
         if (animator != null)
@@ -225,8 +230,8 @@ public class NinjaController : MonoBehaviour
     // Also check on collision stay for more reliable detection
     void OnCollisionStay2D(Collision2D collision)
     {
-        // Only process if we're moving fast enough to bounce
-        if (rb.velocity.magnitude > velocityDeadzone)
+        // Only process if we're moving fast enough to bounce and bouncing is enabled
+        if (bounceOffWalls && rb.velocity.magnitude > velocityDeadzone)
         {
             HandleCollision(collision);
         }
@@ -250,7 +255,7 @@ public class NinjaController : MonoBehaviour
             KillEnemy(collisionObject);
         }
         // Check if the collision is with a platform layer
-        else if (IsInLayerMask(collisionLayer, platformLayers))
+        else if (bounceOffWalls && IsInLayerMask(collisionLayer, platformLayers))
         {
             BounceOffWall(collision);
         }
@@ -259,8 +264,8 @@ public class NinjaController : MonoBehaviour
         {
             Die();
         }
-        // For any other non-player collision, assume it's a wall
-        else if (collisionLayer != defaultLayer)
+        // For any other non-player collision, assume it's a wall (only bounce if enabled)
+        else if (bounceOffWalls && collisionLayer != defaultLayer)
         {
             if (showDebugInfo)
             {
@@ -268,8 +273,8 @@ public class NinjaController : MonoBehaviour
             }
             BounceOffWall(collision);
         }
-        // Force wall bounces if enabled
-        else if (forceWallBounces)
+        // Force wall bounces if both enabled
+        else if (bounceOffWalls && forceWallBounces)
         {
             Debug.LogWarning($"Force bouncing off: {collisionObject.name}");
             BounceOffWall(collision);
@@ -285,6 +290,9 @@ public class NinjaController : MonoBehaviour
 
     void BounceOffWall(Collision2D collision)
     {
+        // Skip this function entirely if bouncing is disabled
+        if (!bounceOffWalls) return;
+        
         // Ensure we don't bounce too frequently
         if (Time.time - lastBounceTime < bounceCooldown) return;
         

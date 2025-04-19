@@ -4986,23 +4986,57 @@ MonoBehaviour:
   hazardLayers:
     serializedVersion: 2
     m_Bits: 512
+  bounceOffEnemies: 0
   enemyBounceForce: 2
   killSound: {fileID: 0}
   enemyDetectionRadius: 0.2
-  minWallBounceForce: 1
-  maxWallBounceForce: 3
-  wallBounceMultiplier: 3
-  velocityDeadzone: 0.5
-  maxBounceVelocity: 1
+  bounceOffWalls: 0
+  minWallBounceForce: 0
+  maxWallBounceForce: 0
+  wallBounceMultiplier: 0
+  velocityDeadzone: 0
+  maxBounceVelocity: 0
   addUpwardForce: 0
-  upwardForceAmount: 1
+  upwardForceAmount: 0
   wallBounceSound: {fileID: 0}
   forceWallBounces: 0
+  enableAirControl: 1
+  airDrag: 0.01
+  terminalVelocity: 5
+  horizontalTerminalVelocity: 10
+  dragCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  applyAirBraking: 1
+  airBrakingThreshold: 10
+  airBrakingMultiplier: 1.5
   deathEffect: {fileID: 0}
   deathSound: {fileID: 0}
   respawnDelay: 2
   showDebugInfo: 0
   showBounceGizmos: 1
+  showVelocityInfo: 1
 --- !u!61 &1041554117
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -5063,7 +5097,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDrag: 1
   m_AngularDrag: 1
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -5666,7 +5700,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1486275674
 Transform:
   m_ObjectHideFlags: 0
