@@ -51,12 +51,17 @@ Balance Ninja is a 2D physics-based platformer where the player controls a ninja
 
 ### 4. Trap Types
 
-#### Moving Traps
+#### Gear Traps
 - Create with Sprite Renderer and Collider2D (set as trigger)
 - Tag as "Trap"
+- Layer as "Hazard" (create this layer)
 - Add Animator if using animations
-- Attach `Trap.cs` script
-- Configure movement parameters
+- Attach `GearTrap.cs` script
+- Configure movement parameters:
+  - Set `moveDirection` to customize movement axis (e.g., Vector3.right for horizontal)
+  - Enable/disable rotation with `shouldRotate`
+  - Adjust `rotationSpeed` for visual spinning effect
+  - Set movement distance, speed and delay time
 
 #### Spike Traps
 - Create with Sprite Renderer and BoxCollider2D
@@ -78,7 +83,7 @@ Balance Ninja is a 2D physics-based platformer where the player controls a ninja
 ## Required Tags
 - "Player" - For the ninja
 - "Enemy" - For all enemies
-- "Trap" - For moving traps
+- "Trap" - For moving gear traps
 - "Hazard" - For spike traps (set automatically by SpikeTrap script)
 - "Bullet" - For enemy projectiles
 
