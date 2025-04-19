@@ -23,6 +23,16 @@ public class NinjaController : MonoBehaviour
     public float upwardForceAmount = 2f;
     public AudioClip wallBounceSound;
     public bool forceWallBounces = false; // Set to true if bounces aren't working reliably
+    
+    [Header("Air Movement Settings")]
+    public bool enableAirControl = true;
+    public float airDrag = 0.05f;              // How quickly the ninja slows down in air
+    public float terminalVelocity = 15f;       // Maximum falling speed
+    public float horizontalTerminalVelocity = 12f; // Maximum horizontal speed 
+    public AnimationCurve dragCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Control how drag is applied based on speed
+    public bool applyAirBraking = true;        // Slow down more when moving very fast
+    public float airBrakingThreshold = 10f;    // Speed at which air braking begins
+    public float airBrakingMultiplier = 1.5f;  // How much stronger braking is at high speeds
 
     [Header("Death")]
     public GameObject deathEffect;
@@ -32,6 +42,7 @@ public class NinjaController : MonoBehaviour
     [Header("Debug")]
     public bool showDebugInfo = false;
     public bool showBounceGizmos = false;
+    public bool showVelocityInfo = false;
 
     private Rigidbody2D rb;
     private Animator animator;
@@ -41,6 +52,7 @@ public class NinjaController : MonoBehaviour
     private float lastBounceTime;
     private float bounceCooldown = 0.1f;
     private int defaultLayer;
+    private bool isGrounded = false;
 
     void Start()
     {
@@ -70,11 +82,91 @@ public class NinjaController : MonoBehaviour
             CheckEnemyCollisions();
             
             // Debug velocity for troubleshooting
-            if (showDebugInfo && Time.frameCount % 30 == 0)
+            if ((showDebugInfo || showVelocityInfo) && Time.frameCount % 30 == 0)
             {
-                Debug.Log($"Current Velocity: {rb.velocity.magnitude:F2} ({rb.velocity})");
+                Debug.Log($"Current Velocity: {rb.velocity.magnitude:F2} ({rb.velocity}) | Grounded: {isGrounded}");
             }
         }
+    }
+
+    void FixedUpdate()
+    {
+        if (isDead) return;
+        
+        // Check if grounded
+        CheckGrounded();
+        
+        // Apply air movement physics
+        if (enableAirControl && !isGrounded)
+        {
+            ApplyAirPhysics();
+        }
+    }
+    
+    void CheckGrounded()
+    {
+        // Simple ground check using raycast
+        float rayDistance = 0.1f; // Small distance to check below the player
+        Vector2 rayStart = transform.position;
+        rayStart.y -= GetComponent<Collider2D>().bounds.extents.y - 0.05f; // Start at bottom of collider
+        
+        // Cast in 3 directions (down, slightly left, slightly right)
+        RaycastHit2D hitDown = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, platformLayers);
+        RaycastHit2D hitLeft = Physics2D.Raycast(rayStart - new Vector2(0.2f, 0), Vector2.down, rayDistance, platformLayers);
+        RaycastHit2D hitRight = Physics2D.Raycast(rayStart + new Vector2(0.2f, 0), Vector2.down, rayDistance, platformLayers);
+        
+        // We're grounded if any of these hit
+        isGrounded = hitDown.collider != null || hitLeft.collider != null || hitRight.collider != null;
+        
+        // Update animator if available
+        if (animator != null)
+        {
+            try
+            {
+                animator.SetBool("Grounded", isGrounded);
+            }
+            catch
+            {
+                // Parameter doesn't exist, just ignore
+            }
+        }
+    }
+    
+    void ApplyAirPhysics()
+    {
+        Vector2 currentVelocity = rb.velocity;
+        
+        // Apply terminal velocity (clamping)
+        float yVelocity = Mathf.Max(currentVelocity.y, -terminalVelocity);
+        float xVelocity = Mathf.Clamp(currentVelocity.x, -horizontalTerminalVelocity, horizontalTerminalVelocity);
+        
+        // Apply air drag (slowing down over time)
+        float speed = new Vector2(xVelocity, yVelocity).magnitude;
+        float dragFactor = airDrag * dragCurve.Evaluate(speed / terminalVelocity);
+        
+        // Apply additional braking at high speeds if enabled
+        if (applyAirBraking && speed > airBrakingThreshold)
+        {
+            float excessSpeed = speed - airBrakingThreshold;
+            float additionalDrag = excessSpeed * airBrakingMultiplier * Time.fixedDeltaTime;
+            dragFactor += additionalDrag;
+        }
+        
+        // Don't apply drag to vertical velocity when falling (feels better)
+        if (yVelocity < 0)
+        {
+            // Apply drag to horizontal only when falling
+            xVelocity = Mathf.Lerp(xVelocity, 0, dragFactor * Time.fixedDeltaTime);
+        }
+        else
+        {
+            // Apply drag to both axes when rising
+            xVelocity = Mathf.Lerp(xVelocity, 0, dragFactor * Time.fixedDeltaTime);
+            yVelocity = Mathf.Lerp(yVelocity, 0, dragFactor * 0.5f * Time.fixedDeltaTime); // Less drag on y when rising
+        }
+        
+        // Apply the calculated velocity
+        rb.velocity = new Vector2(xVelocity, yVelocity);
     }
 
     void CheckEnemyCollisions()
@@ -376,7 +468,7 @@ public class NinjaController : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, radius);
         
         // Display bounce debugging when enabled
-        if (showBounceGizmos && Application.isPlaying && !isDead)
+        if ((showBounceGizmos || showVelocityInfo) && Application.isPlaying && !isDead)
         {
             // Draw the last wall normal
             Gizmos.color = Color.green;
@@ -387,6 +479,18 @@ public class NinjaController : MonoBehaviour
             if (rb != null)
             {
                 Gizmos.DrawRay(transform.position, rb.velocity.normalized * 2);
+            }
+            
+            // Draw ground check rays when in scene view
+            if (GetComponent<Collider2D>() != null)
+            {
+                Vector2 rayStart = transform.position;
+                rayStart.y -= GetComponent<Collider2D>().bounds.extents.y - 0.05f;
+                
+                Gizmos.color = isGrounded ? Color.green : Color.red;
+                Gizmos.DrawRay(rayStart, Vector2.down * 0.1f);
+                Gizmos.DrawRay(rayStart - new Vector2(0.2f, 0), Vector2.down * 0.1f);
+                Gizmos.DrawRay(rayStart + new Vector2(0.2f, 0), Vector2.down * 0.1f);
             }
         }
     }
