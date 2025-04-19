@@ -3897,7 +3897,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 1.42
+  orthographic size: 2.2666426
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -4294,13 +4294,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelRb: {fileID: 688273396}
-  rotationSensitivity: 1
-  maxRotationSpeed: 100
+  rotationSensitivity: 0.5
+  maxRotationSpeed: 50
   damping: 5
-  snapBackSpeed: 2
+  snapBackSpeed: 0
   useRotationLimits: 0
   maxRotationAngle: 45
-  autoSnapBack: 1
+  autoSnapBack: 0
   showDebugInfo: 1
 --- !u!50 &688273396
 Rigidbody2D:
@@ -4484,12 +4484,12 @@ MonoBehaviour:
   enemyBounceForce: 2
   killSound: {fileID: 0}
   enemyDetectionRadius: 0.2
-  minWallBounceForce: 1
-  maxWallBounceForce: 5
-  wallBounceMultiplier: 1
+  minWallBounceForce: 0
+  maxWallBounceForce: 0
+  wallBounceMultiplier: 0
   velocityDeadzone: 0.1
-  maxBounceVelocity: 5
-  addUpwardForce: 1
+  maxBounceVelocity: 0
+  addUpwardForce: 0
   upwardForceAmount: 1
   wallBounceSound: {fileID: 0}
   forceWallBounces: 0
@@ -5511,7 +5511,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1713246028
 Transform:
   m_ObjectHideFlags: 0

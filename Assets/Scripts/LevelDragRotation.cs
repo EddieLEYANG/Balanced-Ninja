@@ -4,6 +4,7 @@ public class LevelDragRotation : MonoBehaviour
 {
     [Header("References")]
     public Rigidbody2D levelRb;
+    public Camera mainCamera;
 
     [Header("Rotation Settings")]
     public float rotationSensitivity = 1.0f;
@@ -14,6 +15,11 @@ public class LevelDragRotation : MonoBehaviour
     public float maxRotationAngle = 45f;
     public bool autoSnapBack = false;
     
+    [Header("Physics Settings")]
+    public bool stabilizeChildren = true;
+    public float stabilizationForce = 10f;
+    public bool useFixedUpdateForRotation = true;
+    
     [Header("Debug")]
     public bool showDebugInfo = false;
 
@@ -21,32 +27,72 @@ public class LevelDragRotation : MonoBehaviour
     private Vector3 lastMousePos;
     private float targetRotation;
     private Vector2 screenCenter;
+    private float rotationVelocity; // For SmoothDamp
+    private float lastFrameRotation;
 
     void Start()
     {
         if (levelRb == null)
             levelRb = GetComponent<Rigidbody2D>();
             
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+            
         // Initialize to current rotation
-        targetRotation = levelRb.rotation;
+        targetRotation = levelRb ? levelRb.rotation : 0f;
+        lastFrameRotation = targetRotation;
         
         // Get screen center for better rotation calculations
-        screenCenter = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+        UpdateScreenCenter();
+        
+        // Configure Rigidbody2D for more stable rotations
+        if (levelRb != null)
+        {
+            levelRb.interpolation = RigidbodyInterpolation2D.Interpolate;
+            levelRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            
+            // Set these for the level root to improve physics stability
+            Physics2D.queriesHitTriggers = true;
+            Physics2D.queriesStartInColliders = false;
+            Physics2D.callbacksOnDisable = false;
+        }
     }
 
     void Update()
     {
+        // Handle input in Update for responsive controls
         HandleInput();
         
-        if (showDebugInfo)
+        // Only apply rotation in Update if not using FixedUpdate
+        if (!useFixedUpdateForRotation)
         {
-            Debug.Log($"Rotation: {levelRb.rotation}, Target: {targetRotation}, Dragging: {isDragging}");
+            ApplyRotation();
+        }
+        
+        if (showDebugInfo && Time.frameCount % 60 == 0)
+        {
+            Debug.Log($"Rotation: {(levelRb ? levelRb.rotation : 0):F2}, Target: {targetRotation:F2}, RotVelocity: {rotationVelocity:F2}");
         }
     }
 
     void FixedUpdate()
     {
-        ApplyRotation();
+        // Apply rotation in FixedUpdate for more stable physics
+        if (useFixedUpdateForRotation)
+        {
+            ApplyRotation();
+        }
+        
+        // Stabilize physics objects if needed
+        if (stabilizeChildren)
+        {
+            StabilizePhysicsObjects();
+        }
+    }
+    
+    void UpdateScreenCenter()
+    {
+        screenCenter = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
     }
     
     void HandleInput()
@@ -55,6 +101,9 @@ public class LevelDragRotation : MonoBehaviour
         {
             isDragging = true;
             lastMousePos = Input.mousePosition;
+            
+            // Re-calculate screen center in case resolution changed
+            UpdateScreenCenter();
         }
         else if (Input.GetMouseButtonUp(0))
         {
@@ -100,25 +149,72 @@ public class LevelDragRotation : MonoBehaviour
     
     void ApplyRotation()
     {
-        // Gradually approach the target rotation with smooth damping
-        if (Mathf.Abs(levelRb.rotation - targetRotation) > 0.01f)
+        if (levelRb == null) return;
+        
+        // Skip if the difference is too small
+        if (Mathf.Abs(levelRb.rotation - targetRotation) <= 0.01f)
         {
-            float currentRotation = levelRb.rotation;
-            float newRotation;
+            rotationVelocity = 0f;
+            return;
+        }
             
-            if (isDragging || autoSnapBack)
+        float currentRotation = levelRb.rotation;
+        float newRotation;
+        
+        // Calculate time delta based on whether we're in FixedUpdate or Update
+        float timeDelta = useFixedUpdateForRotation ? Time.fixedDeltaTime : Time.deltaTime;
+        
+        if (isDragging || autoSnapBack)
+        {
+            // Use SmoothDamp for more stable rotation
+            float speedFactor = isDragging ? damping : snapBackSpeed;
+            newRotation = Mathf.SmoothDamp(currentRotation, targetRotation, ref rotationVelocity, 
+                                          1.0f / speedFactor, Mathf.Infinity, timeDelta);
+        }
+        else
+        {
+            // Keep the current target when not dragging, but dampen any residual motion
+            newRotation = Mathf.SmoothDamp(currentRotation, targetRotation, ref rotationVelocity, 
+                                          0.2f, Mathf.Infinity, timeDelta);
+        }
+        
+        // Apply the rotation - use this instead of setting rotation directly
+        levelRb.MoveRotation(newRotation);
+        
+        // Track rotation for calculating angular velocity
+        lastFrameRotation = newRotation;
+    }
+    
+    void StabilizePhysicsObjects()
+    {
+        if (levelRb == null) return;
+        
+        // Find all rigidbodies that are children of this level
+        Rigidbody2D[] childBodies = GetComponentsInChildren<Rigidbody2D>();
+        
+        foreach (Rigidbody2D rb in childBodies)
+        {
+            // Skip the level rigidbody itself
+            if (rb == levelRb) continue;
+            
+            // Skip if object is not enabled
+            if (!rb.gameObject.activeInHierarchy) continue;
+            
+            // Apply additional gravity force in the direction of world down
+            // This helps objects stay in place better during rotation
+            rb.AddForce(Vector2.down * stabilizationForce, ForceMode2D.Force);
+            
+            // Reduce angular velocity to prevent spinning objects
+            if (Mathf.Abs(rb.angularVelocity) > 0.1f)
             {
-                // Smoothly interpolate toward target
-                float speedFactor = isDragging ? damping : snapBackSpeed;
-                newRotation = Mathf.Lerp(currentRotation, targetRotation, Time.fixedDeltaTime * speedFactor);
-            }
-            else
-            {
-                // Keep the current target when not dragging
-                newRotation = targetRotation;
+                rb.angularVelocity *= 0.95f;
             }
             
-            levelRb.MoveRotation(newRotation);
+            // Ensure the dynamic objects are set to continuous collision detection
+            if (rb.bodyType == RigidbodyType2D.Dynamic)
+            {
+                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            }
         }
     }
 }
