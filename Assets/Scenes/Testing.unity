@@ -4796,7 +4796,7 @@ MonoBehaviour:
   damping: 5
   snapBackSpeed: 0
   useRotationLimits: 0
-  maxRotationAngle: 45
+  maxRotationAngle: 90
   autoSnapBack: 0
   stabilizeChildren: 1
   stabilizationForce: 10
