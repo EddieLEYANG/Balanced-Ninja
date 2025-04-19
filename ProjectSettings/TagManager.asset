@@ -8,6 +8,7 @@ TagManager:
   - Trap
   - Bullet
   - Platform
+  - Hazard
   layers:
   - Default
   - TransparentFX
