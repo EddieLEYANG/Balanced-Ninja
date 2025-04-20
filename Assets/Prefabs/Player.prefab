@@ -121,10 +121,10 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 1
+  m_Mass: 10
+  m_LinearDrag: 2
   m_AngularDrag: 1
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -135,7 +135,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 0
 --- !u!114 &-5004920678207437931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,9 +157,11 @@ MonoBehaviour:
   hazardLayers:
     serializedVersion: 2
     m_Bits: 512
+  bounceOffEnemies: 0
   enemyBounceForce: 2
   killSound: {fileID: 0}
   enemyDetectionRadius: 0.2
+  bounceOffWalls: 0
   minWallBounceForce: 1
   maxWallBounceForce: 3
   wallBounceMultiplier: 3
@@ -169,11 +171,43 @@ MonoBehaviour:
   upwardForceAmount: 1
   wallBounceSound: {fileID: 0}
   forceWallBounces: 0
+  enableAirControl: 1
+  airDrag: 1
+  terminalVelocity: 5
+  horizontalTerminalVelocity: 12
+  dragCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  applyAirBraking: 1
+  airBrakingThreshold: 10
+  airBrakingMultiplier: 1.5
   deathEffect: {fileID: 0}
   deathSound: {fileID: 0}
   respawnDelay: 2
   showDebugInfo: 0
   showBounceGizmos: 1
+  showVelocityInfo: 0
 --- !u!58 &-348064746557751395
 CircleCollider2D:
   m_ObjectHideFlags: 0
